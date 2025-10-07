@@ -5,7 +5,7 @@ import { genSalt, hash, compare } from 'bcryptjs';
 import type { TAuthResponse } from './auth.types';
 import { SignJWT, jwtVerify } from 'jose';
 
-const jwtToken = new TextEncoder().encode(process.env.JWT_SECRET);
+export const jwtToken = new TextEncoder().encode(process.env.JWT_SECRET);
 const jwtRefreshToken = new TextEncoder().encode(process.env.JWT_SECRET);
 const host = process.env.HOST || 'localhost';
 
@@ -29,8 +29,6 @@ export const createdAuth = async (
     data: auth,
     omit: {
       passwordHash: true,
-      createdAt: true,
-      updatedAt: true,
     },
   });
 };
@@ -45,6 +43,23 @@ export const findEmail = async (email: string): Promise<Auth | null> => {
   return prisma.auth.findUnique({
     where: {
       email,
+    },
+  });
+};
+
+/**
+ * Поиск учетной записи по идентификатору.
+ *
+ * @param {number} email - адрес электронной почты.
+ * @returns {Promise<Auth | null>} найденная учетная запись.
+ */
+export const findId = async (id: number): Promise<TAuthResponse | null> => {
+  return prisma.auth.findUnique({
+    where: {
+      id,
+    },
+    omit: {
+      passwordHash: true,
     },
   });
 };
@@ -68,8 +83,6 @@ export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
   }
   const payload = {
     id: user.id,
-    email: user.email,
-    role: user.role,
   };
 
   const token = await new SignJWT(payload)
@@ -93,21 +106,3 @@ export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
     })
   );
 };
-
-// import { SignJWT, jwtVerify } from 'jose';
-
-// const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-// // Create token
-// const token = await new SignJWT({ userId: 123 })
-//   .setProtectedHeader({ alg: 'HS256' })
-//   .setExpirationTime('1h')
-//   .sign(secret);
-
-// // Verify token
-// try {
-//   const { payload } = await jwtVerify(token, secret);
-//   console.log(payload.userId);
-// } catch (err) {
-//   console.error('Invalid token');
-// }

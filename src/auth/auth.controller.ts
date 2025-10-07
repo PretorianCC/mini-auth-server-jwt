@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import { createdAuth, authToken } from './auth.service';
+import { createdAuth, authToken, findId } from './auth.service';
 import type { Request, Response } from 'express';
 import { authMiddleware } from './auth.middleware';
 import { authDto, createAuthDto } from './auth.dto';
 import type { AuthDto, CreateAuthDto } from './auth.dto';
 import {
-  PassDontMatch,
-  Unauthorized,
-  UserCreationError,
+  ERR_UNAUTHORIZED,
+  ERR_PASS_DONT_MATCH,
+  ERR_USER_CREATION,
+  ERR_FIND_USER,
 } from './auth.constants';
 import { status_200, status_400 } from './auth.returnStatus';
 
@@ -22,13 +23,13 @@ router.put('/auth/user', async (req: Request, res: Response) => {
   }
   let newUser: CreateAuthDto = req.body;
   if (newUser.password != newUser.passwordOld) {
-    return status_400(res, PassDontMatch);
+    return status_400(res, ERR_PASS_DONT_MATCH);
   }
   try {
     const result = await createdAuth(newUser);
     status_200(res, result);
   } catch {
-    status_400(res, UserCreationError);
+    status_400(res, ERR_USER_CREATION);
   }
 });
 
@@ -43,18 +44,28 @@ router.post('/auth/login', async (req: Request, res: Response) => {
     const result = await authToken(auth);
     status_200(res, result);
   } catch {
-    status_400(res, Unauthorized);
+    status_400(res, ERR_UNAUTHORIZED);
   }
 });
+
+// Получить пользователя.
+router.get(
+  '/auth/user',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    const payload = res.locals?.payload;
+    try {
+      const result = await findId(payload.id);
+      status_200(res, result);
+    } catch {
+      status_400(res, ERR_FIND_USER);
+    }
+  }
+);
 
 // Обновить токен пользователя.
 router.post('/auth/refresh', (req: Request, res: Response) => {
   res.json({ message: 'Обновить токены пользователя.' });
-});
-
-// Удалить токены у пользователя.
-router.post('/auth/logout', (req: Request, res: Response) => {
-  res.json({ message: 'Удалить токены у пользователя.' });
 });
 
 // Удалить пользователя.
@@ -65,11 +76,6 @@ router.delete('/auth/user', (req: Request, res: Response) => {
 // Получить пользователей.
 router.get('/auth/users', (req: Request, res: Response) => {
   res.json({ message: 'Получить пользователей.' });
-});
-
-// Удалить всех не подтвержденных пользователей. (ни разу не авторизовался, удаляем).
-router.delete('/auth/users', (req: Request, res: Response) => {
-  res.json({ message: 'Удалить всех не подтвержденных пользователей.' });
 });
 
 // Установить/удалить пользователя из администратора (кроме последнего).

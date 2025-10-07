@@ -21,7 +21,7 @@ enum Role {
 }
 
 model Auth {
-  id            Int        @id @default(autoincrement())
+  id            String     @id @default(cuid())
   name          String                      // Имя пользователя.
   email         String     @unique          // Почтовый адрес.
   role          Role       @default(USER)   // Роль.
