@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createdAuth, authToken, findId } from './auth.service';
 import type { Request, Response } from 'express';
-import { authMiddleware } from './auth.middleware';
+import { authMiddlewareUser } from './auth.middleware';
 import { authDto, createAuthDto } from './auth.dto';
 import type { AuthDto, CreateAuthDto } from './auth.dto';
 import {
@@ -15,13 +15,12 @@ import { status_200, status_400 } from './auth.returnStatus';
 const router = Router();
 
 // Регистрация пользователя.
-//router.put("/auth/user", authMiddleware, (req: Request, res: Response) => {
 router.put('/auth/user', async (req: Request, res: Response) => {
-  const validation = createAuthDto.safeParse(req.body);
+  let newUser: CreateAuthDto = req.body;
+  const validation = createAuthDto.safeParse(newUser);
   if (!validation.success) {
     return status_400(res, JSON.parse(validation.error.message));
   }
-  let newUser: CreateAuthDto = req.body;
   if (newUser.password != newUser.passwordOld) {
     return status_400(res, ERR_PASS_DONT_MATCH);
   }
@@ -35,11 +34,11 @@ router.put('/auth/user', async (req: Request, res: Response) => {
 
 // Авторизация по логину и паролю, получить токены.
 router.post('/auth/login', async (req: Request, res: Response) => {
-  const validation = authDto.safeParse(req.body);
+  let auth: AuthDto = req.body;
+  const validation = authDto.safeParse(auth);
   if (!validation.success) {
     return status_400(res, JSON.parse(validation.error.message));
   }
-  let auth: AuthDto = req.body;
   try {
     const result = await authToken(auth);
     status_200(res, result);
@@ -51,7 +50,7 @@ router.post('/auth/login', async (req: Request, res: Response) => {
 // Получить пользователя.
 router.get(
   '/auth/user',
-  authMiddleware,
+  authMiddlewareUser,
   async (req: Request, res: Response) => {
     const payload = res.locals?.payload;
     try {

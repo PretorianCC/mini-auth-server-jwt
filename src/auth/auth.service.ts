@@ -3,7 +3,7 @@ import { type Auth, Prisma } from '../generated/prisma';
 import type { Tokens, AuthDto, CreateAuthDto } from './auth.dto';
 import { genSalt, hash, compare } from 'bcryptjs';
 import type { TAuthResponse } from './auth.types';
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT } from 'jose';
 
 export const jwtToken = new TextEncoder().encode(process.env.JWT_SECRET);
 const jwtRefreshToken = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -53,7 +53,7 @@ export const findEmail = async (email: string): Promise<Auth | null> => {
  * @param {number} email - адрес электронной почты.
  * @returns {Promise<Auth | null>} найденная учетная запись.
  */
-export const findId = async (id: number): Promise<TAuthResponse | null> => {
+export const findId = async (id: string): Promise<TAuthResponse | null> => {
   return prisma.auth.findUnique({
     where: {
       id,

@@ -1,6 +1,6 @@
 {
-  "name": "grinavto-auth-bun",
-  "module": "index.ts",
+  "name": "mini-auth-server-jwt",
+  "module": "./src/app.ts",
   "type": "module",
   "private": true,
   "devDependencies": {

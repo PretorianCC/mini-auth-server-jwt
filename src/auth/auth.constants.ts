@@ -3,3 +3,4 @@ export const ERR_USER_CREATION = 'Ошибка создания пользова
 export const ERR_UNAUTHORIZED = 'Не авторизован.';
 export const ERR_JWT_EXPIRED = 'Срок действия истек.';
 export const ERR_FIND_USER = 'Не найден полльзователь.';
+export const ERR_FIND_ADMIN = 'Не найден полльзователь администратор.';
