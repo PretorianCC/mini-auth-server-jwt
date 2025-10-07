@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /** Данные для проверки создания учетной записи.
  *
- * @typedef {Object} createAuthDto - cхема учётной записи.
+ * @typedef {object} createAuthDto - cхема учётной записи.
  * @property {string} name - имя пользователя.
  * @property {string} email - электроннай почта.
  * @property {string} password - пароль.
@@ -16,14 +16,14 @@ export const createAuthDto = z.object({
 });
 
 /**
- * @type {TCreateAuth} - тип для создания учётной записи.
+ * @type {object} - тип для создания учётной записи.
  */
-export type TCreateAuth = z.infer<typeof createAuthDto>;
+export type CreateAuthDto = z.infer<typeof createAuthDto>;
 
 /**
  * Данные для проверки авторизации пользователя.
  *
- * @typedef {Object} authDto - cхема авторизации пользователя.
+ * @typedef {object} authDto - cхема авторизации пользователя.
  * @property {string} login - логин пользователя (электронная почта).
  * @property {string} password - пароль.
  */
@@ -33,27 +33,34 @@ export const authDto = z.object({
 });
 
 /**
- * @type {TAuth} - тип для авторизации пользователя.
+ * @type {object} - тип для авторизации пользователя.
  */
-export type TAuth = z.infer<typeof authDto>;
+export type AuthDto = z.infer<typeof authDto>;
 
 /**
  * Данные для проверки логина пользователя.
  *
- * @typedef {Object} loginDto - cхема логина пользователя.
+ * @typedef {object} loginDto - cхема логина пользователя.
  * @property {string} login - логин пользователя (электронная почта).
  */
 export const loginDto = authDto.omit({ password: true });
 
 /**
- * @type {TLogin} - тип для логина пользователя.
+ * @type {object} - тип для логина пользователя.
  */
-export type TLogin = z.infer<typeof loginDto>;
+export type LoginDto = z.infer<typeof loginDto>;
 
 /**
- * @type {ITokens} - тип токены для авторизации.
+ * @type {string} - тип jwt токен.
  */
-export interface ITokens {
-  token: string;
-  refreshToken: string;
+export type Token = string;
+
+/**
+ * @typedef {object} - тип токены для авторизации.
+ * @property {string} token - токен для авторизации.
+ * @property {string} refreshToken - токен для обновления токенов для авторизации.
+ */
+export interface Tokens {
+  token: Token;
+  refreshToken: Token;
 }

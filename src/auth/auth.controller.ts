@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { createdAuth, authToken } from './auth.service';
-import { type Request, type Response } from 'express';
+import type { Request, Response } from 'express';
 import { authMiddleware } from './auth.middleware';
-import { authDto, createAuthDto, TAuth, TCreateAuth } from './auth.dto';
+import { authDto, createAuthDto } from './auth.dto';
+import type { AuthDto, CreateAuthDto } from './auth.dto';
 import {
   PassDontMatch,
   Unauthorized,
@@ -19,7 +20,7 @@ router.put('/auth/user', async (req: Request, res: Response) => {
   if (!validation.success) {
     return status_400(res, JSON.parse(validation.error.message));
   }
-  let newUser: TCreateAuth = req.body;
+  let newUser: CreateAuthDto = req.body;
   if (newUser.password != newUser.passwordOld) {
     return status_400(res, PassDontMatch);
   }
@@ -31,18 +32,19 @@ router.put('/auth/user', async (req: Request, res: Response) => {
   }
 });
 
-// Авторизация по логину и паролю.
+// Авторизация по логину и паролю, получить токены.
 router.post('/auth/login', async (req: Request, res: Response) => {
   const validation = authDto.safeParse(req.body);
   if (!validation.success) {
     return status_400(res, JSON.parse(validation.error.message));
   }
-  let auth: TAuth = req.body;
-  const tokens = await authToken(auth);
-  if (!tokens) {
-    return status_400(res, Unauthorized);
+  let auth: AuthDto = req.body;
+  try {
+    const result = await authToken(auth);
+    status_200(res, result);
+  } catch {
+    status_400(res, Unauthorized);
   }
-  res.json(tokens);
 });
 
 // Обновить токен пользователя.

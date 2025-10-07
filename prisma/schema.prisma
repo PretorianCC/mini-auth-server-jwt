@@ -26,8 +26,6 @@ model Auth {
   email         String     @unique          // Почтовый адрес.
   role          Role       @default(USER)   // Роль.
   passwordHash  String                      // Хеш пароля.
-  refreshToken  String     @default("")     // Рефреш токен.
-  alive         Boolean                     // Пользователь авторизовывался.
   createdAt     DateTime   @default(now())  // Время создания.
   updatedAt     DateTime   @updatedAt       // Время изменения.
 }

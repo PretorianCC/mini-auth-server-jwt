@@ -1,8 +1,8 @@
 import { prisma } from '../utils/database';
-import { Auth, Prisma } from '../generated/prisma';
-import { ITokens, TAuth, type TCreateAuth } from './auth.dto';
+import { type Auth, Prisma } from '../generated/prisma';
+import type { Tokens, AuthDto, CreateAuthDto } from './auth.dto';
 import { genSalt, hash, compare } from 'bcryptjs';
-import { TAuthResponse } from './auth.types';
+import type { TAuthResponse } from './auth.types';
 import { SignJWT, jwtVerify } from 'jose';
 
 const jwtToken = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -12,11 +12,11 @@ const host = process.env.HOST || 'localhost';
 /**
  * Создаёт новую учётную записб для авторизации.
  *
- * @param {TCreateAuth} createdAuth - данные для создания пользователя.
+ * @param {CreateAuthDto} createdAuth - данные для создания пользователя.
  * @returns {Promise<TAuthResponse>} - созданная учетная запись.
  */
 export const createdAuth = async (
-  createdAuth: TCreateAuth
+  createdAuth: CreateAuthDto
 ): Promise<TAuthResponse> => {
   const salt = await genSalt(10);
   let passwordHash = await hash(createdAuth.password, salt);
@@ -24,13 +24,11 @@ export const createdAuth = async (
     name: createdAuth.name,
     email: createdAuth.email,
     passwordHash: passwordHash,
-    alive: false,
   };
   return prisma.auth.create({
     data: auth,
     omit: {
       passwordHash: true,
-      refreshToken: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -57,12 +55,10 @@ export const findEmail = async (email: string): Promise<Auth | null> => {
  * @param {TAuth} login - логин и пароль.
  *
  */
-export const authToken = async (login: TAuth): Promise<ITokens | null> => {
+export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
   const user = await findEmail(login.login);
   if (!user) {
-    return new Promise((resolve) => {
-      resolve(null);
-    });
+    return user;
   }
   const isPassingPassword = await compare(login.password, user.passwordHash);
   if (!isPassingPassword) {

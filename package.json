@@ -29,6 +29,6 @@
     "dev": "bun --watch run ./src/app.ts",
     "test": "jest",
     "prisma:setup": "bun prisma generate && bun prisma migrate deploy && bun prisma db push",
-    "prisma:migrate": "bun prisma migrate dev --name"
+    "prisma:migrate": "bun prisma migrate dev --name init"
   }
 }
