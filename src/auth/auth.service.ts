@@ -38,7 +38,7 @@ export const createdAuth = async (
  * (только для использования в локальном коде)
  *
  * @param {string} email - адрес электронной почты.
- * @returns {Promise<Auth | null>} найденная учетная запись.
+ * @returns {Promise<Auth | null>} - найденная учетная запись.
  */
 export const findEmail = async (email: string): Promise<Auth | null> => {
   return prisma.auth.findUnique({
@@ -51,8 +51,8 @@ export const findEmail = async (email: string): Promise<Auth | null> => {
 /**
  * Поиск учетной записи по идентификатору.
  *
- * @param {number} email - адрес электронной почты.
- * @returns {Promise<Auth | null>} найденная учетная запись.
+ * @param {number} id - идентификатор учетной записи.
+ * @returns {Promise<TAuthResponse | null>} - найденная учетная запись.
  */
 export const findId = async (id: string): Promise<TAuthResponse | null> => {
   return prisma.auth.findUnique({
@@ -69,7 +69,7 @@ export const findId = async (id: string): Promise<TAuthResponse | null> => {
  * Авторизация пользователя.
  *
  * @param {TAuth} login - логин и пароль.
- *
+ * @returns {Promise<Tokens | null>} - токены для авторизации.
  */
 export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
   const user = await findEmail(login.login);
@@ -106,4 +106,21 @@ export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
       refreshToken,
     })
   );
+};
+
+/**
+ * Удалить учётную запись по идентификатору.
+ *
+ * @param {number} id - идентификатор учетной записи.
+ * @returns {Promise<TAuthResponse | null>} - удалённая учетная запись.
+ */
+export const deleteAuth = async (id: string): Promise<TAuthResponse> => {
+  return prisma.auth.delete({
+    where: {
+      id,
+    },
+    omit: {
+      passwordHash: true,
+    },
+  });
 };

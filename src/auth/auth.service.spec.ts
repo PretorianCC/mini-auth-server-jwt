@@ -1,5 +1,11 @@
 import { expect, test, describe } from 'bun:test';
-import { authToken, createdAuth, findEmail, findId } from './auth.service';
+import {
+  authToken,
+  createdAuth,
+  deleteAuth,
+  findEmail,
+  findId,
+} from './auth.service';
 import type { AuthDto, CreateAuthDto } from './auth.dto';
 
 let id = '';
@@ -57,5 +63,15 @@ describe('AuthService', () => {
     const tokens = await authToken(login);
     expect(tokens).toHaveProperty('token');
     expect(tokens).toHaveProperty('refreshToken');
+  });
+
+  test('Удалить учётную запись по идентификатору', async () => {
+    const auth = await deleteAuth(id);
+    expect(auth).toHaveProperty('id');
+    expect(auth).toHaveProperty('createdAt');
+    expect(auth).toHaveProperty('updatedAt');
+    expect(auth).toHaveProperty('name', newAuth.name);
+    expect(auth).toHaveProperty('email', newAuth.email);
+    expect(auth).toHaveProperty('role', 'USER');
   });
 });

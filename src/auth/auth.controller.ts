@@ -62,14 +62,14 @@ router.get(
   }
 );
 
-// Обновить токен пользователя.
-router.post('/auth/refresh', (req: Request, res: Response) => {
-  res.json({ message: 'Обновить токены пользователя.' });
-});
-
 // Удалить пользователя.
 router.delete('/auth/user', (req: Request, res: Response) => {
   res.json({ message: 'Удалить пользователя.' });
+});
+
+// Обновить токен пользователя.
+router.post('/auth/refresh', (req: Request, res: Response) => {
+  res.json({ message: 'Обновить токены пользователя.' });
 });
 
 // Получить пользователей.
