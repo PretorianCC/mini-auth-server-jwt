@@ -10,7 +10,7 @@ const jwtRefreshToken = new TextEncoder().encode(process.env.JWT_SECRET);
 const host = process.env.HOST || 'localhost';
 
 /**
- * Создаёт новую учётную записб для авторизации.
+ * Создаёт новую учётную записи для авторизации.
  *
  * @param {CreateAuthDto} createdAuth - данные для создания пользователя.
  * @returns {Promise<TAuthResponse>} - созданная учетная запись.
@@ -35,6 +35,7 @@ export const createdAuth = async (
 
 /**
  * Поиск учетной записи по email.
+ * (только для использования в локальном коде)
  *
  * @param {string} email - адрес электронной почты.
  * @returns {Promise<Auth | null>} найденная учетная запись.

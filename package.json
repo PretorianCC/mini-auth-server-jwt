@@ -7,7 +7,6 @@
     "@types/bun": "latest",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
-    "jest": "^30.2.0",
     "prisma": "^6.16.3"
   },
   "peerDependencies": {
@@ -27,7 +26,7 @@
     "build": "bun build ./src/app.ts --outdir ./build",
     "clean": "rm -rf build && echo 'Done.'",
     "dev": "bun --watch run ./src/app.ts",
-    "test": "jest",
+    "test": "bun test",
     "prisma:setup": "bun prisma generate && bun prisma migrate deploy && bun prisma db push",
     "prisma:migrate": "bun prisma migrate dev --name init"
   }
