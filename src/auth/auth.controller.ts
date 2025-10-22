@@ -1,9 +1,16 @@
 import { Router } from 'express';
-import { createdAuth, authToken, findId } from './auth.service';
+import {
+  createdAuth,
+  authToken,
+  findId,
+  deleteAuth,
+  setAdmin,
+  setUser,
+} from './auth.service';
 import type { Request, Response } from 'express';
-import { authMiddlewareUser } from './auth.middleware';
-import { authDto, createAuthDto } from './auth.dto';
-import type { AuthDto, CreateAuthDto } from './auth.dto';
+import { authMiddlewareAdmin, authMiddlewareUser } from './auth.middleware';
+import { authDto, createAuthDto, idDto } from './auth.dto';
+import type { AuthDto, CreateAuthDto, IdDto } from './auth.dto';
 import {
   ERR_UNAUTHORIZED,
   ERR_PASS_DONT_MATCH,
@@ -16,7 +23,7 @@ const router = Router();
 
 // Регистрация пользователя.
 router.put('/auth/user', async (req: Request, res: Response) => {
-  let newUser: CreateAuthDto = req.body;
+  const newUser: CreateAuthDto = req.body;
   const validation = createAuthDto.safeParse(newUser);
   if (!validation.success) {
     return status_400(res, JSON.parse(validation.error.message));
@@ -34,7 +41,7 @@ router.put('/auth/user', async (req: Request, res: Response) => {
 
 // Авторизация по логину и паролю, получить токены.
 router.post('/auth/login', async (req: Request, res: Response) => {
-  let auth: AuthDto = req.body;
+  const auth: AuthDto = req.body;
   const validation = authDto.safeParse(auth);
   if (!validation.success) {
     return status_400(res, JSON.parse(validation.error.message));
@@ -62,10 +69,62 @@ router.get(
   }
 );
 
-// Удалить пользователя.
-router.delete('/auth/user', (req: Request, res: Response) => {
-  res.json({ message: 'Удалить пользователя.' });
-});
+// Удалить учетную запись.
+router.delete(
+  '/auth/user',
+  authMiddlewareUser,
+  async (req: Request, res: Response) => {
+    const data: IdDto = req.body;
+    const validation = idDto.safeParse(data);
+    if (!validation.success) {
+      return status_400(res, JSON.parse(validation.error.message));
+    }
+    try {
+      const result = await deleteAuth(data.id);
+      status_200(res, result);
+    } catch {
+      status_400(res, ERR_FIND_USER);
+    }
+  }
+);
+
+// Установить учетную запись администратором.
+router.post(
+  '/auth/set-admin',
+  authMiddlewareUser,
+  async (req: Request, res: Response) => {
+    const data: IdDto = req.body;
+    const validation = idDto.safeParse(data);
+    if (!validation.success) {
+      return status_400(res, JSON.parse(validation.error.message));
+    }
+    try {
+      const result = await setAdmin(data.id);
+      status_200(res, result);
+    } catch {
+      status_400(res, ERR_FIND_USER);
+    }
+  }
+);
+
+// Установить учетную запись пользователем.
+router.post(
+  '/auth/set-user',
+  authMiddlewareAdmin,
+  async (req: Request, res: Response) => {
+    const data: IdDto = req.body;
+    const validation = idDto.safeParse(data);
+    if (!validation.success) {
+      return status_400(res, JSON.parse(validation.error.message));
+    }
+    try {
+      const result = await setUser(data.id);
+      status_200(res, result);
+    } catch {
+      status_400(res, ERR_FIND_USER);
+    }
+  }
+);
 
 // Обновить токен пользователя.
 router.post('/auth/refresh', (req: Request, res: Response) => {
@@ -75,11 +134,6 @@ router.post('/auth/refresh', (req: Request, res: Response) => {
 // Получить пользователей.
 router.get('/auth/users', (req: Request, res: Response) => {
   res.json({ message: 'Получить пользователей.' });
-});
-
-// Установить/удалить пользователя из администратора (кроме последнего).
-router.post('/auth/admin', (req: Request, res: Response) => {
-  res.json({ message: 'Установить/удалить пользователя из администратора.' });
 });
 
 // Документация.

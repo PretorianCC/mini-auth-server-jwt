@@ -6,8 +6,8 @@ import {
   ERR_UNAUTHORIZED,
 } from './auth.constants';
 import { jwtVerify, errors } from 'jose';
-import { jwtToken } from './auth.service';
-import type { Auth } from '../generated/prisma';
+import { isAdmin, jwtToken } from './auth.service';
+import type { IdDto } from './auth.dto';
 
 export const authMiddlewareUser = async (
   req: Request,
@@ -44,10 +44,10 @@ export const authMiddlewareAdmin = async (
   const jwt = authHeader.slice(7);
   try {
     const { payload } = await jwtVerify(jwt, jwtToken);
-    const payloadLocals = payload as Auth;
-    res.locals.payload = payloadLocals;
-    if (payloadLocals.role.toString() != 'Admin') {
-      return status_401(res, ERR_FIND_ADMIN);
+    const payloadAuth = payload as IdDto;
+    res.locals.payload = payloadAuth;
+    if (!(await isAdmin(payloadAuth.id))) {
+      return status_401(res, ERR_UNAUTHORIZED);
     }
   } catch (err) {
     if ((err = errors.JWTExpired)) {

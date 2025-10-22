@@ -5,8 +5,13 @@ import {
   deleteAuth,
   findEmail,
   findId,
+  isAdmin,
+  isUser,
+  setAdmin,
+  setUser,
 } from './auth.service';
 import type { AuthDto, CreateAuthDto } from './auth.dto';
+import { Role } from '../generated/prisma';
 
 let id = '';
 const newAuth: CreateAuthDto = {
@@ -47,15 +52,15 @@ describe('AuthService', () => {
   });
 
   test('Поиск учетной записи по идентификатору', async () => {
-    const user = await findId(id);
-    expect(user).not.toBeNull();
-    if (user) {
-      expect(user).toHaveProperty('id');
-      expect(user).toHaveProperty('createdAt');
-      expect(user).toHaveProperty('updatedAt');
-      expect(user).toHaveProperty('name', newAuth.name);
-      expect(user).toHaveProperty('email', newAuth.email);
-      expect(user).toHaveProperty('role', 'USER');
+    const auth = await findId(id);
+    expect(auth).not.toBeNull();
+    if (auth) {
+      expect(auth).toHaveProperty('id');
+      expect(auth).toHaveProperty('createdAt');
+      expect(auth).toHaveProperty('updatedAt');
+      expect(auth).toHaveProperty('name', newAuth.name);
+      expect(auth).toHaveProperty('email', newAuth.email);
+      expect(auth).toHaveProperty('role', Role.USER);
     }
   });
 
@@ -65,6 +70,26 @@ describe('AuthService', () => {
     expect(tokens).toHaveProperty('refreshToken');
   });
 
+  test('Установить пользователем', async () => {
+    const auth = await setUser(id);
+    expect(auth).toHaveProperty('role', Role.USER);
+  });
+
+  test('Роль учётной записи - пользователь', async () => {
+    const user = await isUser(id);
+    expect(user).toBe(true);
+  });
+
+  test('Установить администратором', async () => {
+    const auth = await setAdmin(id);
+    expect(auth).toHaveProperty('role', Role.ADMIN);
+  });
+
+  test('Роль учётной записи - administrator', async () => {
+    const user = await isAdmin(id);
+    expect(user).toBe(true);
+  });
+
   test('Удалить учётную запись по идентификатору', async () => {
     const auth = await deleteAuth(id);
     expect(auth).toHaveProperty('id');
@@ -72,6 +97,5 @@ describe('AuthService', () => {
     expect(auth).toHaveProperty('updatedAt');
     expect(auth).toHaveProperty('name', newAuth.name);
     expect(auth).toHaveProperty('email', newAuth.email);
-    expect(auth).toHaveProperty('role', 'USER');
   });
 });

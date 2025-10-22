@@ -16,7 +16,7 @@ export const createAuthDto = z.object({
 });
 
 /**
- * @type {object} - тип для создания учётной записи.
+ * @typedef {object} - тип для создания учётной записи.
  */
 export type CreateAuthDto = z.infer<typeof createAuthDto>;
 
@@ -33,7 +33,7 @@ export const authDto = z.object({
 });
 
 /**
- * @type {object} - тип для авторизации пользователя.
+ * @typedef {object} - тип для авторизации пользователя.
  */
 export type AuthDto = z.infer<typeof authDto>;
 
@@ -46,12 +46,12 @@ export type AuthDto = z.infer<typeof authDto>;
 export const loginDto = authDto.omit({ password: true });
 
 /**
- * @type {object} - тип для логина пользователя.
+ * @typedef {object} - тип для логина пользователя.
  */
 export type LoginDto = z.infer<typeof loginDto>;
 
 /**
- * @type {string} - тип jwt токен.
+ * @typedef {string} - тип jwt токен.
  */
 export type Token = string;
 
@@ -64,3 +64,16 @@ export interface Tokens {
   token: Token;
   refreshToken: Token;
 }
+
+/**
+ * @typedef {object} - тип идентификатор учетной записи.
+ * @property {string} - id - идентификатор учетной записи.
+ */
+export const idDto = z.object({
+  id: z.cuid('Не идентификатор учётной записи'),
+});
+
+/**
+ * @typedef {object} - тип для логина пользователя.
+ */
+export type IdDto = z.infer<typeof idDto>;

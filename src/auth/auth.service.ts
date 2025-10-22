@@ -4,6 +4,7 @@ import type { Tokens, AuthDto, CreateAuthDto } from './auth.dto';
 import { genSalt, hash, compare } from 'bcryptjs';
 import type { TAuthResponse } from './auth.types';
 import { SignJWT } from 'jose';
+import { Role } from '../generated/prisma';
 
 export const jwtToken = new TextEncoder().encode(process.env.JWT_SECRET);
 const jwtRefreshToken = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -72,18 +73,18 @@ export const findId = async (id: string): Promise<TAuthResponse | null> => {
  * @returns {Promise<Tokens | null>} - токены для авторизации.
  */
 export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
-  const user = await findEmail(login.login);
-  if (!user) {
-    return user;
+  const auth = await findEmail(login.login);
+  if (!auth) {
+    return auth;
   }
-  const isPassingPassword = await compare(login.password, user.passwordHash);
+  const isPassingPassword = await compare(login.password, auth.passwordHash);
   if (!isPassingPassword) {
     return new Promise((resolve) => {
       resolve(null);
     });
   }
   const payload = {
-    id: user.id,
+    id: auth.id,
   };
 
   const token = await new SignJWT(payload)
@@ -112,7 +113,7 @@ export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
  * Удалить учётную запись по идентификатору.
  *
  * @param {number} id - идентификатор учетной записи.
- * @returns {Promise<TAuthResponse | null>} - удалённая учетная запись.
+ * @returns {Promise<TAuthResponse>} - удалённая учетная запись.
  */
 export const deleteAuth = async (id: string): Promise<TAuthResponse> => {
   return prisma.auth.delete({
@@ -122,5 +123,87 @@ export const deleteAuth = async (id: string): Promise<TAuthResponse> => {
     omit: {
       passwordHash: true,
     },
+  });
+};
+
+/**
+ * Установить роль администратора.
+ *
+ * @param {number} id - идентификатор учетной записи.
+ * @returns {Promise<TAuthResponse>} - учетная запись.
+ */
+export const setAdmin = async (id: string): Promise<TAuthResponse> => {
+  return prisma.auth.update({
+    where: {
+      id,
+    },
+    omit: {
+      passwordHash: true,
+    },
+    data: {
+      role: Role.ADMIN,
+    },
+  });
+};
+
+/**
+ * Установить роль пользователя.
+ *
+ * @param {number} id - идентификатор учетной записи.
+ * @returns {Promise<TAuthResponse>} - учетная запись.
+ */
+export const setUser = async (id: string): Promise<TAuthResponse> => {
+  return prisma.auth.update({
+    where: {
+      id,
+    },
+    omit: {
+      passwordHash: true,
+    },
+    data: {
+      role: Role.USER,
+    },
+  });
+};
+
+/**
+ * Эта роль администратор?
+ *
+ * @param {number} id - идентификатор учетной записи.
+ * @returns {Promise<boolean>} - роль учетной записи администратор или нет.
+ */
+export const isAdmin = async (id: string): Promise<Boolean> => {
+  let auth = null;
+  try {
+    auth = await findId(id);
+  } catch {
+    new Promise((resolve) => {
+      resolve(false);
+    });
+  }
+  if (!auth) return false;
+  return new Promise((resolve) => {
+    resolve(auth.role == Role.ADMIN);
+  });
+};
+
+/**
+ * Эта роль пользователь?
+ *
+ * @param {number} id - идентификатор учетной записи.
+ * @returns {Promise<boolean>} - роль учетной записи пользователь или нет.
+ */
+export const isUser = async (id: string): Promise<Boolean> => {
+  let auth = null;
+  try {
+    auth = await findId(id);
+  } catch {
+    new Promise((resolve) => {
+      resolve(false);
+    });
+  }
+  if (!auth) return false;
+  return new Promise((resolve) => {
+    resolve(auth.role == Role.USER);
   });
 };
