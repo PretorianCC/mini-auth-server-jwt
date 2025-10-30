@@ -22,7 +22,7 @@ import { status_200, status_400 } from './auth.returnStatus';
 const router = Router();
 
 // Регистрация пользователя.
-router.put('/auth/user', async (req: Request, res: Response) => {
+router.put('/auth/create', async (req: Request, res: Response) => {
   const newUser: CreateAuthDto = req.body;
   const validation = createAuthDto.safeParse(newUser);
   if (!validation.success) {
@@ -54,7 +54,7 @@ router.post('/auth/login', async (req: Request, res: Response) => {
   }
 });
 
-// Получить пользователя.
+// Получить текущую учётную запись.
 router.get(
   '/auth/user',
   authMiddlewareUser,
@@ -72,7 +72,7 @@ router.get(
 // Удалить учетную запись.
 router.delete(
   '/auth/user',
-  authMiddlewareUser,
+  authMiddlewareAdmin,
   async (req: Request, res: Response) => {
     const data: IdDto = req.body;
     const validation = idDto.safeParse(data);
@@ -91,7 +91,7 @@ router.delete(
 // Установить учетную запись администратором.
 router.post(
   '/auth/set-admin',
-  authMiddlewareUser,
+  authMiddlewareAdmin,
   async (req: Request, res: Response) => {
     const data: IdDto = req.body;
     const validation = idDto.safeParse(data);

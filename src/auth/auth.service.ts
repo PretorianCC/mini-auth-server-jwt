@@ -5,10 +5,7 @@ import { genSalt, hash, compare } from 'bcryptjs';
 import type { TAuthResponse } from './auth.types';
 import { SignJWT } from 'jose';
 import { Role } from '../generated/prisma';
-
-export const jwtToken = new TextEncoder().encode(process.env.JWT_SECRET);
-const jwtRefreshToken = new TextEncoder().encode(process.env.JWT_SECRET);
-const host = process.env.HOST || 'localhost';
+import { host, jwtRefreshSecret, jwtSecret } from './auth.constants';
 
 /**
  * Создаёт новую учётную записи для авторизации.
@@ -87,19 +84,8 @@ export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
     id: auth.id,
   };
 
-  const token = await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setIssuer(host)
-    .setExpirationTime('1h')
-    .sign(jwtToken);
-
-  const refreshToken = await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setIssuer(host)
-    .setExpirationTime('4w')
-    .sign(jwtRefreshToken);
+  const token = await getToken(payload, host, '1h', jwtSecret);
+  const refreshToken = await getToken(payload, host, '4w', jwtRefreshSecret);
 
   return new Promise((resolve) =>
     resolve({
@@ -206,4 +192,26 @@ export const isUser = async (id: string): Promise<Boolean> => {
   return new Promise((resolve) => {
     resolve(auth.role == Role.USER);
   });
+};
+
+/**
+ * Создать токен.
+ *
+ * @param {object} payload - payload для токена.
+ * @host {string} host - хост где выдан токен.
+ * @param {string} time - время жизни токена.
+ * @returns {Promise<string>} - токен.
+ */
+export const getToken = async (
+  payload: { id: string },
+  host: string,
+  time: string,
+  jwtSecret: Uint8Array<ArrayBufferLike>
+): Promise<string> => {
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setIssuer(host)
+    .setExpirationTime(time)
+    .sign(jwtSecret);
 };
