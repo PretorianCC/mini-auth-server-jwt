@@ -132,7 +132,7 @@ router.post('/auth/refresh', (req: Request, res: Response) => {
 });
 
 // Получить пользователей.
-router.get('/auth/users', (req: Request, res: Response) => {
+router.get('/auth/several', (req: Request, res: Response) => {
   res.json({ message: 'Получить пользователей.' });
 });
 

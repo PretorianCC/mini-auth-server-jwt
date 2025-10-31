@@ -10,6 +10,7 @@ import {
   isUser,
   setAdmin,
   setUser,
+  several,
 } from './auth.service';
 import type { AuthDto, CreateAuthDto } from './auth.dto';
 import { Role } from '../generated/prisma';
@@ -54,47 +55,52 @@ describe('AuthService', () => {
   });
 
   test('Поиск учетной записи по идентификатору', async () => {
-    const auth = await findId(id);
-    expect(auth).not.toBeNull();
-    if (auth) {
-      expect(auth).toHaveProperty('id');
-      expect(auth).toHaveProperty('createdAt');
-      expect(auth).toHaveProperty('updatedAt');
-      expect(auth).toHaveProperty('name', newAuth.name);
-      expect(auth).toHaveProperty('email', newAuth.email);
-      expect(auth).toHaveProperty('role', Role.USER);
+    const result = await findId(id);
+    expect(result).not.toBeNull();
+    if (result) {
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('createdAt');
+      expect(result).toHaveProperty('updatedAt');
+      expect(result).toHaveProperty('name', newAuth.name);
+      expect(result).toHaveProperty('email', newAuth.email);
+      expect(result).toHaveProperty('role', Role.USER);
     }
   });
 
   test('Получить токен', async () => {
-    const token = await getToken({ id }, host, '1h', jwtSecret);
-    expect(token).toBeString();
+    const result = await getToken({ id }, host, '1h', jwtSecret);
+    expect(result).toBeString();
   });
 
   test('Получить токены учётной записи', async () => {
-    const tokens = await authToken(login);
-    expect(tokens).toHaveProperty('token');
-    expect(tokens).toHaveProperty('refreshToken');
+    const result = await authToken(login);
+    expect(result).toHaveProperty('token');
+    expect(result).toHaveProperty('refreshToken');
   });
 
   test('Установить пользователем', async () => {
-    const auth = await setUser(id);
-    expect(auth).toHaveProperty('role', Role.USER);
+    const result = await setUser(id);
+    expect(result).toHaveProperty('role', Role.USER);
   });
 
   test('Роль учётной записи - пользователь', async () => {
-    const user = await isUser(id);
-    expect(user).toBe(true);
+    const result = await isUser(id);
+    expect(result).toBe(true);
   });
 
   test('Установить администратором', async () => {
-    const auth = await setAdmin(id);
-    expect(auth).toHaveProperty('role', Role.ADMIN);
+    const result = await setAdmin(id);
+    expect(result).toHaveProperty('role', Role.ADMIN);
   });
 
   test('Роль учётной записи - administrator', async () => {
-    const user = await isAdmin(id);
-    expect(user).toBe(true);
+    const result = await isAdmin(id);
+    expect(result).toBe(true);
+  });
+
+  test('Выбрать несколько записей', async () => {
+    const result = await several(0, 10);
+    expect(result).toBeArray();
   });
 
   test('Удалить учётную запись по идентификатору', async () => {

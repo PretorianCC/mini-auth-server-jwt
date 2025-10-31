@@ -1,11 +1,18 @@
 import { prisma } from '../utils/database';
 import { type Auth, Prisma } from '../generated/prisma';
-import type { Tokens, AuthDto, CreateAuthDto } from './auth.dto';
+import type { Tokens, AuthDto, CreateAuthDto, Token } from './auth.dto';
 import { genSalt, hash, compare } from 'bcryptjs';
 import type { TAuthResponse } from './auth.types';
-import { SignJWT } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 import { Role } from '../generated/prisma';
-import { host, jwtRefreshSecret, jwtSecret } from './auth.constants';
+import { HOST, jWT_SECRET_REFRESH, jWT_SECRET } from './auth.constants';
+
+/**
+ * @typedef {object} - payload токена.
+ */
+type Payload = {
+  id: string;
+};
 
 /**
  * Создаёт новую учётную записи для авторизации.
@@ -80,12 +87,12 @@ export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
       resolve(null);
     });
   }
-  const payload = {
+  const payload: Payload = {
     id: auth.id,
   };
 
-  const token = await getToken(payload, host, '1h', jwtSecret);
-  const refreshToken = await getToken(payload, host, '4w', jwtRefreshSecret);
+  const token = await getToken(payload, HOST, '1h', jWT_SECRET);
+  const refreshToken = await getToken(payload, HOST, '4w', jWT_SECRET_REFRESH);
 
   return new Promise((resolve) =>
     resolve({
@@ -153,7 +160,7 @@ export const setUser = async (id: string): Promise<TAuthResponse> => {
 };
 
 /**
- * Эта роль администратор?
+ * Эта роль администратор? (только для сервера)
  *
  * @param {number} id - идентификатор учетной записи.
  * @returns {Promise<boolean>} - роль учетной записи администратор или нет.
@@ -174,7 +181,7 @@ export const isAdmin = async (id: string): Promise<Boolean> => {
 };
 
 /**
- * Эта роль пользователь?
+ * Эта роль пользователь? (только для сервера)
  *
  * @param {number} id - идентификатор учетной записи.
  * @returns {Promise<boolean>} - роль учетной записи пользователь или нет.
@@ -214,4 +221,35 @@ export const getToken = async (
     .setIssuer(host)
     .setExpirationTime(time)
     .sign(jwtSecret);
+};
+
+/**
+ * Выбрать учетные записи.
+ *
+ * @param {number} - skip - пропускает количество записей от начала.
+ * @param {number} - take - получает количество записей.
+ * @returns {Promise<TAuthResponse[]>} - учетные записи.
+ */
+export const several = async (
+  skip: number,
+  take: number
+): Promise<TAuthResponse[]> => {
+  return await prisma.auth.findMany({
+    skip,
+    take,
+    omit: {
+      passwordHash: true,
+    },
+  });
+};
+
+/**
+ * Получить payload из токена.
+ *
+ * @param {string} jwtToken - токен.
+ * @returns {object} - payload токена.
+ */
+export const getPayload = async (jwtToken: Token): Promise<Payload> => {
+  const { payload } = await jwtVerify(jwtToken, jWT_SECRET);
+  return payload as Payload;
 };

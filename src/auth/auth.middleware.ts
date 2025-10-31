@@ -4,11 +4,9 @@ import {
   ERR_FIND_ADMIN,
   ERR_JWT_EXPIRED,
   ERR_UNAUTHORIZED,
-  jwtSecret,
 } from './auth.constants';
-import { jwtVerify, errors } from 'jose';
-import { isAdmin } from './auth.service';
-import type { IdDto } from './auth.dto';
+import { errors } from 'jose';
+import { getPayload, isAdmin } from './auth.service';
 
 export const authMiddlewareUser = async (
   req: Request,
@@ -19,10 +17,9 @@ export const authMiddlewareUser = async (
   if (!authorization) {
     return status_401(res, ERR_UNAUTHORIZED);
   }
-  const jwt = authorization.slice(7);
+  const jwtToken = authorization.slice(7);
   try {
-    const { payload } = await jwtVerify(jwt, jwtSecret);
-    res.locals.payload = payload;
+    res.locals.payload = await getPayload(jwtToken);
   } catch (err) {
     if ((err = errors.JWTExpired)) {
       return status_401(res, ERR_JWT_EXPIRED);
@@ -42,12 +39,10 @@ export const authMiddlewareAdmin = async (
   if (!authorization) {
     return status_401(res, ERR_UNAUTHORIZED);
   }
-  const jwt = authorization.slice(7);
+  const jwtToken = authorization.slice(7);
   try {
-    const { payload } = await jwtVerify(jwt, jwtSecret);
-    const payloadAuth = payload as IdDto;
-    res.locals.payload = payloadAuth;
-    if (!(await isAdmin(payloadAuth.id))) {
+    res.locals.payload = await getPayload(jwtToken);
+    if (!(await isAdmin(res.locals.payload.id))) {
       return status_401(res, ERR_FIND_ADMIN);
     }
   } catch (err) {

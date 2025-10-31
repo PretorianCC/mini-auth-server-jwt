@@ -1,8 +1,8 @@
-export const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
-export const jwtRefreshSecret = new TextEncoder().encode(
+export const jWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+export const jWT_SECRET_REFRESH = new TextEncoder().encode(
   process.env.REFRESH_JWT_SECRET
 );
-export const host = process.env.HOST || 'localhost';
+export const HOST = process.env.HOST || 'localhost';
 
 export const ERR_PASS_DONT_MATCH = 'Не совпадают пароли.';
 export const ERR_USER_CREATION = 'Ошибка создания пользователя.';
