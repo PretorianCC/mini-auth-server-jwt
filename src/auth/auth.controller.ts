@@ -8,11 +8,24 @@ import {
   setUser,
   getPayload,
   getTokens,
+  several,
 } from './auth.service';
 import type { Request, Response } from 'express';
 import { authMiddlewareAdmin, authMiddlewareUser } from './auth.middleware';
-import { authDto, createAuthDto, idDto, jwtTokenDto } from './auth.dto';
-import type { AuthDto, CreateAuthDto, IdDto, JwtTokenDto } from './auth.dto';
+import {
+  authDto,
+  createAuthDto,
+  idDto,
+  jwtTokenDto,
+  durationSeveralDto,
+} from './auth.dto';
+import type {
+  AuthDto,
+  CreateAuthDto,
+  IdDto,
+  JwtTokenDto,
+  DurationSeveralDto,
+} from './auth.dto';
 import {
   ERR_UNAUTHORIZED,
   ERR_PASS_DONT_MATCH,
@@ -20,6 +33,8 @@ import {
   ERR_FIND_USER,
   jWT_SECRET_REFRESH,
   ERR_JWT_EXPIRED,
+  ERR_FIND_USERS,
+  ERR_PARAMS,
 } from './auth.constants';
 import { status_200, status_400, status_401 } from './auth.returnStatus';
 
@@ -147,9 +162,29 @@ router.post('/auth/refresh', async (req: Request, res: Response) => {
 });
 
 // Получить пользователей.
-router.get('/auth/several', (req: Request, res: Response) => {
-  res.json({ message: 'Получить пользователей.' });
-});
+router.get(
+  '/auth/several/:skip/:take',
+  authMiddlewareUser,
+  async (req: Request, res: Response) => {
+    const skip = req.params?.skip;
+    const take = req.params?.take;
+    if (!skip || !take) return status_400(res, ERR_PARAMS);
+    const data = {
+      skip: Number(skip),
+      take: Number(take),
+    };
+    const validation = durationSeveralDto.safeParse(data);
+    if (!validation.success) {
+      return status_400(res, JSON.parse(validation.error.message));
+    }
+    try {
+      const result = await several(validation.data.skip, validation.data.take);
+      status_200(res, result);
+    } catch {
+      status_400(res, ERR_FIND_USERS);
+    }
+  }
+);
 
 // Документация.
 router.get('/', (req: Request, res: Response) => {

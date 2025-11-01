@@ -9,7 +9,9 @@ export const ERR_USER_CREATION = 'Ошибка создания пользова
 export const ERR_UNAUTHORIZED = 'Не авторизован.';
 export const ERR_JWT_EXPIRED = 'Срок действия токена истек.';
 export const ERR_FIND_USER = 'Не найден пользователь.';
+export const ERR_FIND_USERS = 'Не найден пользователи.';
 export const ERR_FIND_ADMIN = 'Не найден администратор.';
+export const ERR_PARAMS = 'Не правильные параметры.';
 
 // Время жизни токенов
 export const TIMELIFE_TOKEN = '1h';

@@ -90,3 +90,24 @@ export const jwtTokenDto = z.object({
  * @typedef {object} - тип для токена.
  */
 export type JwtTokenDto = z.infer<typeof jwtTokenDto>;
+
+/**
+ * @typedef {object} - период.
+ * @property {number} skip - с позиции.
+ * @property {number} take - количество.
+ */
+export const durationSeveralDto = z.object({
+  skip: z.preprocess(
+    (val) => Number(val),
+    z.number('Не число').int().nonnegative()
+  ),
+  take: z.preprocess(
+    (val) => Number(val),
+    z.number('Не число').int().nonnegative().max(100, 'Больше 100')
+  ),
+});
+
+/**
+ * @typedef {object} - тип периода.
+ */
+export type DurationSeveralDto = z.infer<typeof durationSeveralDto>;
