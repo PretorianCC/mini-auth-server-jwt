@@ -4,6 +4,7 @@ import {
   ERR_FIND_ADMIN,
   ERR_JWT_EXPIRED,
   ERR_UNAUTHORIZED,
+  jWT_SECRET,
 } from './auth.constants';
 import { errors } from 'jose';
 import { getPayload, isAdmin } from './auth.service';
@@ -19,7 +20,7 @@ export const authMiddlewareUser = async (
   }
   const jwtToken = authorization.slice(7);
   try {
-    res.locals.payload = await getPayload(jwtToken);
+    res.locals.payload = await getPayload(jwtToken, jWT_SECRET);
   } catch (err) {
     if ((err = errors.JWTExpired)) {
       return status_401(res, ERR_JWT_EXPIRED);
@@ -41,7 +42,7 @@ export const authMiddlewareAdmin = async (
   }
   const jwtToken = authorization.slice(7);
   try {
-    res.locals.payload = await getPayload(jwtToken);
+    res.locals.payload = await getPayload(jwtToken, jWT_SECRET);
     if (!(await isAdmin(res.locals.payload.id))) {
       return status_401(res, ERR_FIND_ADMIN);
     }

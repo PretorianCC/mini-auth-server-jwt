@@ -6,6 +6,7 @@ import {
   findEmail,
   findId,
   getToken,
+  getTokens,
   isAdmin,
   isUser,
   setAdmin,
@@ -14,7 +15,7 @@ import {
 } from './auth.service';
 import type { AuthDto, CreateAuthDto } from './auth.dto';
 import { Role } from '../generated/prisma';
-import { host, jwtSecret } from './auth.constants';
+import { HOST, jWT_SECRET } from './auth.constants';
 
 let id = '';
 const newAuth: CreateAuthDto = {
@@ -68,8 +69,14 @@ describe('AuthService', () => {
   });
 
   test('Получить токен', async () => {
-    const result = await getToken({ id }, host, '1h', jwtSecret);
+    const result = await getToken({ id }, HOST, '1h', jWT_SECRET);
     expect(result).toBeString();
+  });
+
+  test('Получить токены', async () => {
+    const result = await getTokens({ id });
+    expect(result).toHaveProperty('token');
+    expect(result).toHaveProperty('refreshToken');
   });
 
   test('Получить токены учётной записи', async () => {

@@ -10,3 +10,7 @@ export const ERR_UNAUTHORIZED = 'Не авторизован.';
 export const ERR_JWT_EXPIRED = 'Срок действия токена истек.';
 export const ERR_FIND_USER = 'Не найден пользователь.';
 export const ERR_FIND_ADMIN = 'Не найден администратор.';
+
+// Время жизни токенов
+export const TIMELIFE_TOKEN = '1h';
+export const TIMELIFE_TOKEN_REFRESH = '4w';

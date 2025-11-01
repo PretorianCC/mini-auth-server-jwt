@@ -5,7 +5,13 @@ import { genSalt, hash, compare } from 'bcryptjs';
 import type { TAuthResponse } from './auth.types';
 import { jwtVerify, SignJWT } from 'jose';
 import { Role } from '../generated/prisma';
-import { HOST, jWT_SECRET_REFRESH, jWT_SECRET } from './auth.constants';
+import {
+  HOST,
+  jWT_SECRET_REFRESH,
+  jWT_SECRET,
+  TIMELIFE_TOKEN,
+  TIMELIFE_TOKEN_REFRESH,
+} from './auth.constants';
 
 /**
  * @typedef {object} - payload токена.
@@ -13,6 +19,8 @@ import { HOST, jWT_SECRET_REFRESH, jWT_SECRET } from './auth.constants';
 type Payload = {
   id: string;
 };
+
+const omitPrisma = { passwordHash: true };
 
 /**
  * Создаёт новую учётную записи для авторизации.
@@ -32,9 +40,7 @@ export const createdAuth = async (
   };
   return prisma.auth.create({
     data: auth,
-    omit: {
-      passwordHash: true,
-    },
+    omit: omitPrisma,
   });
 };
 
@@ -64,9 +70,7 @@ export const findId = async (id: string): Promise<TAuthResponse | null> => {
     where: {
       id,
     },
-    omit: {
-      passwordHash: true,
-    },
+    omit: omitPrisma,
   });
 };
 
@@ -79,27 +83,18 @@ export const findId = async (id: string): Promise<TAuthResponse | null> => {
 export const authToken = async (login: AuthDto): Promise<Tokens | null> => {
   const auth = await findEmail(login.login);
   if (!auth) {
-    return auth;
+    return Promise.resolve(null);
   }
   const isPassingPassword = await compare(login.password, auth.passwordHash);
   if (!isPassingPassword) {
-    return new Promise((resolve) => {
-      resolve(null);
-    });
+    return Promise.resolve(null);
   }
   const payload: Payload = {
     id: auth.id,
   };
 
-  const token = await getToken(payload, HOST, '1h', jWT_SECRET);
-  const refreshToken = await getToken(payload, HOST, '4w', jWT_SECRET_REFRESH);
-
-  return new Promise((resolve) =>
-    resolve({
-      token,
-      refreshToken,
-    })
-  );
+  const tokens = getTokens(payload);
+  return Promise.resolve(tokens);
 };
 
 /**
@@ -113,9 +108,7 @@ export const deleteAuth = async (id: string): Promise<TAuthResponse> => {
     where: {
       id,
     },
-    omit: {
-      passwordHash: true,
-    },
+    omit: omitPrisma,
   });
 };
 
@@ -130,9 +123,7 @@ export const setAdmin = async (id: string): Promise<TAuthResponse> => {
     where: {
       id,
     },
-    omit: {
-      passwordHash: true,
-    },
+    omit: omitPrisma,
     data: {
       role: Role.ADMIN,
     },
@@ -150,9 +141,7 @@ export const setUser = async (id: string): Promise<TAuthResponse> => {
     where: {
       id,
     },
-    omit: {
-      passwordHash: true,
-    },
+    omit: omitPrisma,
     data: {
       role: Role.USER,
     },
@@ -170,14 +159,10 @@ export const isAdmin = async (id: string): Promise<Boolean> => {
   try {
     auth = await findId(id);
   } catch {
-    new Promise((resolve) => {
-      resolve(false);
-    });
+    return Promise.resolve(false);
   }
-  if (!auth) return false;
-  return new Promise((resolve) => {
-    resolve(auth.role == Role.ADMIN);
-  });
+  if (!auth) return Promise.resolve(false);
+  return Promise.resolve(auth.role == Role.ADMIN);
 };
 
 /**
@@ -191,14 +176,10 @@ export const isUser = async (id: string): Promise<Boolean> => {
   try {
     auth = await findId(id);
   } catch {
-    new Promise((resolve) => {
-      resolve(false);
-    });
+    return Promise.resolve(false);
   }
-  if (!auth) return false;
-  return new Promise((resolve) => {
-    resolve(auth.role == Role.USER);
-  });
+  if (!auth) return Promise.resolve(false);
+  return Promise.resolve(auth.role == Role.USER);
 };
 
 /**
@@ -210,7 +191,7 @@ export const isUser = async (id: string): Promise<Boolean> => {
  * @returns {Promise<string>} - токен.
  */
 export const getToken = async (
-  payload: { id: string },
+  payload: Payload,
   host: string,
   time: string,
   jwtSecret: Uint8Array<ArrayBufferLike>
@@ -221,6 +202,26 @@ export const getToken = async (
     .setIssuer(host)
     .setExpirationTime(time)
     .sign(jwtSecret);
+};
+
+/**
+ * Создать токен и refrash токен.
+ *
+ * @param {object} payload - payload для токена.
+ * @returns {Promise<Tokens | null>}
+ */
+export const getTokens = async (payload: Payload): Promise<Tokens | null> => {
+  const token = await getToken(payload, HOST, TIMELIFE_TOKEN, jWT_SECRET);
+  const refreshToken = await getToken(
+    payload,
+    HOST,
+    TIMELIFE_TOKEN_REFRESH,
+    jWT_SECRET_REFRESH
+  );
+  return Promise.resolve({
+    token,
+    refreshToken,
+  });
 };
 
 /**
@@ -237,9 +238,7 @@ export const several = async (
   return await prisma.auth.findMany({
     skip,
     take,
-    omit: {
-      passwordHash: true,
-    },
+    omit: omitPrisma,
   });
 };
 
@@ -249,7 +248,10 @@ export const several = async (
  * @param {string} jwtToken - токен.
  * @returns {object} - payload токена.
  */
-export const getPayload = async (jwtToken: Token): Promise<Payload> => {
-  const { payload } = await jwtVerify(jwtToken, jWT_SECRET);
+export const getPayload = async (
+  jwtToken: Token,
+  jwtSecret: Uint8Array<ArrayBufferLike>
+): Promise<Payload> => {
+  const { payload } = await jwtVerify(jwtToken, jwtSecret);
   return payload as Payload;
 };

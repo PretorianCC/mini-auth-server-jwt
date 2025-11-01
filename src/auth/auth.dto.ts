@@ -67,13 +67,26 @@ export interface Tokens {
 
 /**
  * @typedef {object} - тип идентификатор учетной записи.
- * @property {string} - id - идентификатор учетной записи.
+ * @property {string} id - идентификатор учетной записи.
  */
 export const idDto = z.object({
   id: z.cuid('Не идентификатор учётной записи'),
 });
 
 /**
- * @typedef {object} - тип для логина пользователя.
+ * @typedef {object} - тип для логина авторизации.
  */
 export type IdDto = z.infer<typeof idDto>;
+
+/**
+ * @typedef {object} - jwt токен.
+ * @property {string} token - jwt токен.
+ */
+export const jwtTokenDto = z.object({
+  token: z.jwt('Не jwt токен.'),
+});
+
+/**
+ * @typedef {object} - тип для токена.
+ */
+export type JwtTokenDto = z.infer<typeof jwtTokenDto>;

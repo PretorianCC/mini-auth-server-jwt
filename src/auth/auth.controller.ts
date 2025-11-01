@@ -6,16 +6,19 @@ import {
   deleteAuth,
   setAdmin,
   setUser,
+  getPayload,
+  getTokens,
 } from './auth.service';
 import type { Request, Response } from 'express';
 import { authMiddlewareAdmin, authMiddlewareUser } from './auth.middleware';
-import { authDto, createAuthDto, idDto } from './auth.dto';
-import type { AuthDto, CreateAuthDto, IdDto } from './auth.dto';
+import { authDto, createAuthDto, idDto, jwtTokenDto } from './auth.dto';
+import type { AuthDto, CreateAuthDto, IdDto, JwtTokenDto } from './auth.dto';
 import {
   ERR_UNAUTHORIZED,
   ERR_PASS_DONT_MATCH,
   ERR_USER_CREATION,
   ERR_FIND_USER,
+  jWT_SECRET_REFRESH,
 } from './auth.constants';
 import { status_200, status_400 } from './auth.returnStatus';
 
@@ -126,9 +129,16 @@ router.post(
   }
 );
 
-// Обновить токен пользователя.
-router.post('/auth/refresh', (req: Request, res: Response) => {
-  res.json({ message: 'Обновить токены пользователя.' });
+// Обновить токены пользователя.
+router.post('/auth/refresh', async (req: Request, res: Response) => {
+  const data: JwtTokenDto = req.body;
+  const validation = jwtTokenDto.safeParse(data);
+  if (!validation.success) {
+    return status_400(res, JSON.parse(validation.error.message));
+  }
+  const payload = await getPayload(data.token, jWT_SECRET_REFRESH);
+  const tokens = await getTokens(payload);
+  status_200(res, tokens);
 });
 
 // Получить пользователей.
