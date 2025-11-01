@@ -251,7 +251,11 @@ export const several = async (
 export const getPayload = async (
   jwtToken: Token,
   jwtSecret: Uint8Array<ArrayBufferLike>
-): Promise<Payload> => {
-  const { payload } = await jwtVerify(jwtToken, jwtSecret);
-  return payload as Payload;
+): Promise<Payload | null> => {
+  try {
+    const { payload } = await jwtVerify(jwtToken, jwtSecret);
+    return payload as Payload;
+  } catch {
+    return Promise.resolve(null);
+  }
 };

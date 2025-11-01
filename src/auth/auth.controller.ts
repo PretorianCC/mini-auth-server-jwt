@@ -19,8 +19,9 @@ import {
   ERR_USER_CREATION,
   ERR_FIND_USER,
   jWT_SECRET_REFRESH,
+  ERR_JWT_EXPIRED,
 } from './auth.constants';
-import { status_200, status_400 } from './auth.returnStatus';
+import { status_200, status_400, status_401 } from './auth.returnStatus';
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.post('/auth/login', async (req: Request, res: Response) => {
 
 // Получить текущую учётную запись.
 router.get(
-  '/auth/user',
+  '/auth/account',
   authMiddlewareUser,
   async (req: Request, res: Response) => {
     const payload = res.locals?.payload;
@@ -74,7 +75,7 @@ router.get(
 
 // Удалить учетную запись.
 router.delete(
-  '/auth/user',
+  '/auth/account',
   authMiddlewareAdmin,
   async (req: Request, res: Response) => {
     const data: IdDto = req.body;
@@ -137,8 +138,12 @@ router.post('/auth/refresh', async (req: Request, res: Response) => {
     return status_400(res, JSON.parse(validation.error.message));
   }
   const payload = await getPayload(data.token, jWT_SECRET_REFRESH);
-  const tokens = await getTokens(payload);
-  status_200(res, tokens);
+  if (!payload) {
+    status_401(res, ERR_JWT_EXPIRED);
+  } else {
+    const tokens = await getTokens(payload);
+    status_200(res, tokens);
+  }
 });
 
 // Получить пользователей.
